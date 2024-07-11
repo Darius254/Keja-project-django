@@ -1,7 +1,3 @@
-# Market-Place-Website-Using-Django-Real-State-Example
-
-This repository will help build your own custom market place and online shop. Whether you are looking forward to create an online real state website or want to create a car dealership online market place, this repository is a good place to start using Django.
-
 In order to start using this app, you will need to create a virtual environment, git clone the project:
 
 ```
@@ -36,9 +32,4 @@ And finally run the project by running:
 $ python manage.py runserver
 ```
 
-Now the project should be up and running on your local host. You can enter /admin after your localhost url so that you can login and add your models and their images.
-
-
-If you faced any questions don't hesitate to ask via our youtube channel at Arashtad.
-
-This repository is created with guidance video for coding in Django which will help you understand deeper.
+<!-- Now the project should be up and running on your local host. You can enter /admin after your localhost url so that you can login and add your models and their images. -->
