@@ -1,7 +1,7 @@
+# models.py
 from django.db import models
 
 def product_image_path(instance, filename):
-    # This function determines the upload path for product images
     return f'products/{instance.id}/{filename}'
 
 class Product(models.Model):
@@ -16,7 +16,16 @@ class Product(models.Model):
     num_bedrooms = models.PositiveIntegerField(blank=True, null=True)
     square_feet = models.PositiveIntegerField(blank=True, null=True)
     num_floors = models.PositiveIntegerField(blank=True, null=True)
+    booked = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
 
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    message = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message from {self.name} ({self.email})"

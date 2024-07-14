@@ -2,6 +2,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product
 from .forms import ProductSearchForm, GeneralSearchForm, PriceRangeFilterForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.mail import send_mail
+from django.conf import settings
+from .forms import ContactForm
 
 #forms
 from django.shortcuts import render
@@ -69,15 +72,19 @@ def product_list(request):
     return render(request, 'product_list.html', {'products': products, 'form': form})
 
 # forms
-# views.py
+
 
 def about_us(request):
     return render(request, 'about_us.html')
 
+#about
+
 def contact_us(request):
+    success = False
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
+            form.save()  # Save the form data to the database
             name = form.cleaned_data['name']
             email = form.cleaned_data['email']
             message = form.cleaned_data['message']
@@ -90,8 +97,29 @@ def contact_us(request):
                 [settings.DEFAULT_FROM_EMAIL],
                 fail_silently=False,
             )
-            return render(request, 'contact_us.html', {'form': form, 'success': True})
+            success = True
     else:
         form = ContactForm()
-    return render(request, 'contact_us.html', {'form': form})
+    return render(request, 'contact_us.html', {'form': form, 'success': success})
 
+# booking
+
+def book_house(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    if not product.booked:
+        product.booked = True
+        product.save()
+    return redirect('product_list')
+
+# Update your URL configuration to include the new view
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.home, name='home'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('products/<int:product_id>/book/', views.book_house, name='book_house'),
+    path('about-us/', views.about_us, name='about_us'),
+    path('contact-us/', views.contact_us, name='contact_us'),
+]

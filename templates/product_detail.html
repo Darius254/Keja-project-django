@@ -1,28 +1,24 @@
+<!-- product_detail.html -->
 {% extends 'base.html' %}
 
 {% block content %}
 <html>
 <head>
     <title>{{ product.title }}</title>
-    <!-- Include Bootstrap CSS from CDN -->
-    
 </head>
 <body>
-    <!-- Your content here -->
     <div class="container">
         <h1>{{ product.title }}</h1>
-        <p>{{ product.description }}</p>
-        <p>City: {{ product.city }}</p>
-        <p>Price: Ksh{{ product.price }}</p>
+        <p>{{ product.description }}, With {{ product.num_bedrooms }} Bedrooms, {{ product.num_floors }} floors, {{ product.square_feet }} sqr ft of space  at {{ product.address }}, {{ product.city }}</p>
         <p class="text-danger">Price: Ksh{{ product.price }}</p>
+        Status: {% if not product.booked %}
+        <a href="{% url 'book_house' product.id %}" class="btn btn-primary">Book</a>
+    {% else %}
+        <span class="text-danger">Booked</span>
+    {% endif %}
         {% if product.image %}
             <img src="{{ product.image.url }}" alt="{{ product.title }}" class="img-fluid">
         {% endif %}
-        <p>Address: {{ product.address }}</p>
-        <p>Bedrooms: {{ product.num_bedrooms }}</p>
-        <p>Number of Floors: {{ product.num_floors }}</p>
-        <p>Square Feet: {{ product.square_feet }}</p>
-        <p>Zipe Code: {{ product.zip_code }}</p>
     </div>
 </body>
 </html>

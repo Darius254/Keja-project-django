@@ -1,3 +1,4 @@
+<!-- product_list.html -->
 {% extends 'base.html' %}
 
 {% block content %}
@@ -8,9 +9,6 @@
                 <input type="text" name="zip_code" class="form-control" placeholder="Zip Code">
                 <input type="text" name="city" class="form-control" placeholder="City">
                 <input type="text" name="address" class="form-control" placeholder="Address">
-                <!-- <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </div> -->
             </div>
             <div class="row g-3">
                 <div class="col-md-6">
@@ -48,7 +46,11 @@
                             <p>Number of Floors: {{ product.num_floors }}</p>
                             <p>Square Feet: {{ product.square_feet }}</p>
                             <p>Zipe Code: {{ product.zip_code }}</p>
-                            <!-- Add more details like bedrooms, square feet, etc. -->
+                            {% if not product.booked %}
+                                <a href="{% url 'book_house' product.id %}" class="btn btn-primary">Book</a>
+                            {% else %}
+                                <span class="text-danger">Booked</span>
+                            {% endif %}
                         </div>
                     </div>
                 </li>
@@ -65,9 +67,8 @@
                         <img src="{{ product.image.url }}" alt="{{ product.title }}" width="300" height="200">
                     {% endif %}
                     
-                    <!-- Display the number of bedrooms and icon -->
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-bed"></i> <!-- Bootstrap icon for bed -->
+                        <i class="bi bi-bed"></i>
                         {{ product.num_bedrooms }} Bedrooms
                     </div>
                 </li>
@@ -75,5 +76,3 @@
         {% endif %}
     </ul>
 {% endblock %}
-
-
