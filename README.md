@@ -4,9 +4,6 @@ This repository will help build your own custom market place and online shop. Wh
 
 In order to start using this app, you will need to create a virtual environment, git clone the project:
 
-```
-$ git clone https://github.com/arashtad/Market-Place-Website-Using-Django-Real-State-Example
-```
 
 And then run the following command to install the dependencies:
 
