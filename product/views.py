@@ -1,16 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product
+from .models import Product, Booking
 from .forms import ProductSearchForm, GeneralSearchForm, PriceRangeFilterForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import ContactForm
-
-#forms
-from django.shortcuts import render
-from django.core.mail import send_mail
-from django.conf import settings
-from .forms import ContactForm
+from django.contrib.auth.decorators import login_required
 
 def product_detail(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
@@ -20,11 +15,10 @@ def home(request):
     form = GeneralSearchForm(request.GET)
     
     if request.method == 'GET' and 'search' in request.GET:
-        # The 'search' parameter is present in the query string, indicating a search request.
         if form.is_valid():
             search_request = request.GET.urlencode()
-            search_keyword = search_request.split('=')[1].replace('+',' ')
-            search_keyword = search_keyword.replace('%2C',',')
+            search_keyword = search_request.split('=')[1].replace('+', ' ')
+            search_keyword = search_keyword.replace('%2C', ',')
             products = Product.objects.all()
 
             zip_code_list = list(products.filter(zip_code=search_keyword))
@@ -32,16 +26,15 @@ def home(request):
             address_list = list(products.filter(address__icontains=search_keyword))
 
             query_params = ''
-            if (len(zip_code_list) != 0):
+            if len(zip_code_list) != 0:
                 query_params = f'zip_code={zip_code_list[0].zip_code}&city=&address='
-            elif (len(city_list) != 0):
+            elif len(city_list) != 0:
                 query_params = f'zip_code=&city={city_list[0].city}&address='
-            elif (len(address_list) != 0):
+            elif len(address_list) != 0:
                 query_params = f'zip_code=&city=&address={address_list[0].address}'
             return redirect(f'/products/?{query_params}')
 
     return render(request, 'home.html', {'form': form})
-            
 
 def product_list(request):
     form = ProductSearchForm(request.GET)
@@ -71,13 +64,8 @@ def product_list(request):
     
     return render(request, 'product_list.html', {'products': products, 'form': form})
 
-# forms
-
-
 def about_us(request):
     return render(request, 'about_us.html')
-
-#about
 
 def contact_us(request):
     success = False
@@ -102,16 +90,18 @@ def contact_us(request):
         form = ContactForm()
     return render(request, 'contact_us.html', {'form': form, 'success': success})
 
-# booking
-
+@login_required  # Ensure the user is logged in before booking
 def book_house(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
+    
     if not product.booked:
+        # Create a booking entry
+        Booking.objects.create(user=request.user, product=product)
         product.booked = True
         product.save()
+    
     return redirect('product_list')
 
-# Update your URL configuration to include the new view
 from django.urls import path
 from . import views
 

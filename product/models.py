@@ -1,5 +1,6 @@
 # models.py
 from django.db import models
+from django.contrib.auth.models import User
 
 def product_image_path(instance, filename):
     return f'products/{instance.id}/{filename}'
@@ -29,3 +30,13 @@ class ContactMessage(models.Model):
 
     def __str__(self):
         return f"Message from {self.name} ({self.email})"
+
+class Booking(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    booking_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} booked {self.product.title} on {self.booking_date}'
+
+
