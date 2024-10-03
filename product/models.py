@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 def product_image_path(instance, filename):
     return f'products/{instance.id}/{filename}'
 
@@ -40,3 +41,10 @@ class Booking(models.Model):
         return f'{self.user.username} booked {self.product.title} on {self.booking_date}'
 
 
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username

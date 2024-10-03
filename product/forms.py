@@ -1,6 +1,9 @@
 # forms.py
 from django import forms
 from .models import ContactMessage
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from .models import Profile
 
 class ProductSearchForm(forms.Form):
     zip_code = forms.CharField(required=False)
@@ -22,5 +25,20 @@ class ContactForm(forms.Form):
         model = ContactMessage
         fields = ['name', 'email', 'message']
 
-# class ContactForm(forms.ModelForm):
+###
+class CustomUserCreationForm(UserCreationForm):
+    phone_number = forms.CharField(max_length=15, required=True, help_text="Enter your phone number.")
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password1', 'password2', 'phone_number')
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            phone_number = self.cleaned_data['phone_number']
+            Profile.objects.create(user=user, phone_number=phone_number)
+        return user
+
     

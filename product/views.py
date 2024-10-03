@@ -1,12 +1,43 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Product, Booking
-from .forms import ProductSearchForm, GeneralSearchForm, PriceRangeFilterForm
+from .forms import ProductSearchForm, GeneralSearchForm, PriceRangeFilterForm, ContactForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.mail import send_mail
 from django.conf import settings
-from .forms import ContactForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
+from .forms import CustomUserCreationForm
 
+
+# Utility function for filtering products based on search criteria
+def filter_products(request, products):
+    form = ProductSearchForm(request.GET)
+    price_filter_form = PriceRangeFilterForm(request.GET)
+
+    if price_filter_form.is_valid():
+        min_price = price_filter_form.cleaned_data.get('min_price')
+        max_price = price_filter_form.cleaned_data.get('max_price')
+
+        if min_price is not None:
+            products = products.filter(price__gte=min_price)
+        if max_price is not None:
+            products = products.filter(price__lte=max_price)
+
+    if form.is_valid():
+        zip_code = form.cleaned_data.get('zip_code')
+        city = form.cleaned_data.get('city')
+        address = form.cleaned_data.get('address')
+
+        if zip_code:
+            products = products.filter(zip_code=zip_code)
+        if city:
+            products = products.filter(city__icontains=city)
+        if address:
+            products = products.filter(address__icontains=address)
+    
+    return products, form, price_filter_form
+
+# Views
 def product_detail(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     return render(request, 'product_detail.html', {'product': product})
@@ -37,32 +68,27 @@ def home(request):
     return render(request, 'home.html', {'form': form})
 
 def product_list(request):
-    form = ProductSearchForm(request.GET)
-    price_filter_form = PriceRangeFilterForm(request.GET)
     products = Product.objects.all()
-
-    if price_filter_form.is_valid():
-        min_price = price_filter_form.cleaned_data.get('min_price')
-        max_price = price_filter_form.cleaned_data.get('max_price')
-
-        if min_price is not None:
-            products = products.filter(price__gte=min_price)
-        if max_price is not None:
-            products = products.filter(price__lte=max_price)
-
-    if form.is_valid():
-        zip_code = form.cleaned_data.get('zip_code')
-        city = form.cleaned_data.get('city')
-        address = form.cleaned_data.get('address')
-
-        if zip_code:
-            products = products.filter(zip_code=zip_code)
-        if city:
-            products = products.filter(city__icontains=city)
-        if address:
-            products = products.filter(address__icontains=address)
     
-    return render(request, 'product_list.html', {'products': products, 'form': form})
+    # Filter products based on search and price range
+    products, form, price_filter_form = filter_products(request, products)
+    
+    # Pagination setup
+    paginator = Paginator(products, 6)  # Show 6 products per page
+    page = request.GET.get('page', 1)
+
+    try:
+        paginated_products = paginator.page(page)
+    except PageNotAnInteger:
+        paginated_products = paginator.page(1)
+    except EmptyPage:
+        paginated_products = paginator.page(paginator.num_pages)
+
+    return render(request, 'product_list.html', {
+        'products': paginated_products,
+        'form': form,
+        'price_filter_form': price_filter_form
+    })
 
 def about_us(request):
     return render(request, 'about_us.html')
@@ -77,7 +103,7 @@ def contact_us(request):
             email = form.cleaned_data['email']
             message = form.cleaned_data['message']
 
-            # Send email (adjust the email settings as needed)
+            # Send email
             send_mail(
                 f"Contact Form Submission from {name}",
                 message,
@@ -90,7 +116,7 @@ def contact_us(request):
         form = ContactForm()
     return render(request, 'contact_us.html', {'form': form, 'success': success})
 
-@login_required  # Ensure the user is logged in before booking
+@login_required
 def book_house(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     
@@ -102,14 +128,14 @@ def book_house(request, product_id):
     
     return redirect('product_list')
 
-from django.urls import path
-from . import views
-
-urlpatterns = [
-    path('', views.home, name='home'),
-    path('products/', views.product_list, name='product_list'),
-    path('products/<int:product_id>/', views.product_detail, name='product_detail'),
-    path('products/<int:product_id>/book/', views.book_house, name='book_house'),
-    path('about-us/', views.about_us, name='about_us'),
-    path('contact-us/', views.contact_us, name='contact_us'),
-]
+##
+def register(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')  # Redirect to home page after successful registration
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'register.html', {'form': form})
